@@ -20,10 +20,13 @@ def get_openrouter_response(user_message: str, auth_token: str) -> str:
         "HTTP-Referer": "https://github.com",
         "X-Title": "Telegram Bot",
     }
-    payload = {
-        "model": MODEL,
-        "messages": [{"role": "user", "content": user_message}],
-    }
+   payload = {
+    "model": MODEL,
+    "messages": [
+        {"role": "system", "content": "Sən Azərbaycan dilində cavab verən AI köməkçisisən. Həmişə Azərbaycan dilində cavab ver."},
+        {"role": "user", "content": user_message}
+    ],
+}
     try:
         resp = requests.post(OPENROUTER_API_URL, json=payload, headers=headers, timeout=60)
         resp.raise_for_status()
