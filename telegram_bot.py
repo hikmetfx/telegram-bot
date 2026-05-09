@@ -34,7 +34,7 @@ def get_openrouter_response(user_message: str, auth_token: str) -> str:
         return f"Xeta: {e}"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Salam! Mən AI botam. Sualınızı yazın!")
+    await update.message.reply_text("Salam! Men AI botam. Sualinizi yazin ve ya ses mesaji gonderin!")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
@@ -46,6 +46,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     response = get_openrouter_response(user_message, auth_token)
     await update.message.reply_text(response)
 
+async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    auth_token = os.environ.get("ANTHROPIC_AUTH_TOKEN")
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not auth_token:
+        await update.message.reply_text("API açarı tapılmadı.")
+        return
+    voice = update.message.voice
+    file = await context.bot.get_file(voice.file_id)
+    file_url = f"https://api.telegram.org/file/bot{bot_token}/{file.file_path}"
+    await update.message.reply_text("Ses mesajiniz qebul edildi. Cavab hazirlaniir...")
+    response = get_openrouter_response(f"İstifadəçi səsli mesaj göndərdi. Onlara kömək etməyə çalış: [Ses faylı: {file_url}]", auth_token)
+    await update.message.reply_text(response)
+
 def main() -> None:
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     if not token:
@@ -54,6 +67,7 @@ def main() -> None:
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     logger.info("Bot başladı.")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
